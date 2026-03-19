@@ -1,8 +1,6 @@
-# The SaaS Marketing Engine v8.3
+# The SaaS Marketing Engine v9.0
 
 **One command. 24 hours of autonomous outreach. Zero marketing team.**
-
-Built to sell [SignalSprint](https://signalsprint.io). Fork it to sell yours.
 
 ## What It Does
 
@@ -30,7 +28,7 @@ Runs 24/7 as a Claude Code skill. Night shift discovers prospects, AI-qualifies 
    cp .marketing-engine/config/config-template.md .claude/config/marketing-engine-config.md
    ```
 
-3. First run — the engine scans your codebase and auto-generates config:
+3. First run -- the engine scans your codebase and auto-generates config:
    ```bash
    /marketing-engine setup
    ```
@@ -51,58 +49,94 @@ Runs 24/7 as a Claude Code skill. Night shift discovers prospects, AI-qualifies 
 
 $0/month (excluding Claude Code subscription). No Zapier. No HubSpot. No Apollo. No Instantly.
 
-## How It Works
-
-See the [full breakdown](https://signalsprint.io/engine) or read [docs/how-it-works.md](docs/how-it-works.md).
-
 ## Architecture
+
+The engine uses a **split architecture**: a lean orchestration skill (~265 lines) that references detailed docs for specific capabilities. This keeps the skill file fast to load while giving the engine deep knowledge when it needs it.
 
 ```
 skills/
-  marketing-engine.md    # The Claude Code skill — drop into .claude/skills/
+  marketing-engine.md        # Orchestration skill (~265 lines) -- drop into .claude/skills/
+
 config/
-  config-template.md     # Copy this, fill in your product details
-  example-saas.md        # Filled example for a fictional SaaS
-playbooks/
-  channels.md            # Platform-specific posting flows
-templates/
-  voice-rules.md         # Anti-AI detection + brand mention rules
+  config-template.md         # Config template -- copy + fill in your product details
+  example-saas.md            # Filled example for a fictional SaaS
+
 docs/
-  how-it-works.md        # Full 24hr flow breakdown
-  scaling.md             # VPS duplication guide
-  setup-guide.md         # Step-by-step setup
+  setup-guide.md             # Step-by-step installation + proof tool setup
+  how-it-works.md            # Full 24hr flow breakdown
+  mystery-tests.md           # Proof tool: CLI recon + form fill + response tracking
+  cli-reference.md           # Gmail, Sheets, Playwright, Gemini CLI commands
+  night-agents.md            # 4-6 specialist agents for overnight content prep
+  scaling.md                 # VPS duplication guide for volume
+
+playbooks/
+  channels.md                # Platform-specific posting flows (Reddit, LinkedIn, YouTube, etc.)
+
+templates/
+  voice-rules.md             # Anti-AI detection + brand mention rules
 ```
+
+### How the split works
+
+The skill file (`skills/marketing-engine.md`) contains:
+- **Modes:** Setup, Autopilot, Run
+- **Cron schedule:** 18 daily slots across 4 blocks
+- **Phase definitions:** What to do in each phase (1-7)
+- **Caps and targets:** Per-run and daily limits
+- **Voice rules summary:** Quick reference for content quality
+
+When the engine needs details, it reads the relevant doc:
+- Posting on Reddit? Read `playbooks/channels.md`
+- Running a mystery test? Read `docs/mystery-tests.md`
+- Sending emails? Read `docs/cli-reference.md`
+- Preparing night content? Read `docs/night-agents.md`
+
+This means you can customize any aspect by editing the relevant doc without touching the skill file.
 
 ## The 24-Hour Cycle
 
-**Night Shift (10PM-6AM)** — Automated preparation
+**Night Shift (10PM-6AM)** -- Automated preparation
 - 10PM: Discover 30 prospects via Google Maps + LinkedIn
-- 11PM: Run proof tool (website scans, free tool invites)
-- 1AM: Draft personalized emails for all due prospects
-- 3AM: Crawl Reddit/YouTube for threads, pre-write comments
-- 5AM: Write LinkedIn post, draft DMs, save to tmp/
+- 12AM: Draft personalized emails for all due prospects
+- 2AM: Launch specialist agents to prep content in parallel
+- 3:30AM: Review agent outputs, pre-write comments
+- 5AM: Final prep -- LinkedIn post, DMs, everything staged
 
-**Day Shift (7AM-9PM)** — Send + engage
+**Day Shift (7AM-9PM)** -- Send + engage
 - 7AM: Send all night-prepped drafts + LinkedIn post
-- 8AM-12PM: Pipeline discovery + AI qualification
-- 9AM-3PM: Send drafts + LinkedIn connects + IG follows
-- 1PM-8PM: Reddit + YouTube + LinkedIn + Quora comments
-- 9PM: Evaluate, rotate niche, daily summary
+- 9AM-4PM: Pipeline discovery + proof tool tests + comments
+- 5PM-9PM: Evening comments + final sends + daily evaluation
 
-## Case Study
+## Proof Tool (Mystery Tests)
 
-This engine was built to sell [SignalSprint](https://signalsprint.io) — a speed-to-lead platform. In 2 days: 62 prospects in pipeline, 19 emails sent in one morning, 1 hot reply from an agency CEO. [Full case study ->](https://signalsprint.io/engine)
+The engine can automatically test your prospects' businesses -- submit their contact form as a test customer, measure response time, and use the data in personalized outreach. See [docs/mystery-tests.md](docs/mystery-tests.md) for the full process.
+
+Don't have a proof tool yet? The setup wizard helps you build one:
+- **Screenshot + AI Audit** -- screenshot their site, grade it with Gemini Vision
+- **Free Calculator** -- build a simple ROI calculator page
+- **Full Mystery Test** -- submit their forms and measure response time
+
+## Knowledge Base (Obsidian-Compatible)
+
+The engine's docs are plain markdown files that work as an [Obsidian](https://obsidian.md/) vault. Open your `docs/` folder in Obsidian for:
+- Visual graph of all marketing docs
+- Backlinks between files
+- Nice editor for reviewing and editing config
+- Daily log entries as a knowledge base
+
+Not required -- any markdown editor works. But Obsidian makes it easier to see the big picture.
 
 ## Docs
 
-- [Setup Guide](docs/setup-guide.md) — Step-by-step installation
-- [How It Works](docs/how-it-works.md) — Full technical breakdown
-- [Scaling Guide](docs/scaling.md) — VPS duplication for volume
-- [Channel Playbooks](playbooks/channels.md) — Platform-specific flows
-- [Voice Rules](templates/voice-rules.md) — Anti-AI detection rules
+- [Setup Guide](docs/setup-guide.md) -- Step-by-step installation + proof tool setup
+- [How It Works](docs/how-it-works.md) -- Full technical breakdown
+- [Mystery Tests](docs/mystery-tests.md) -- Proof tool reference
+- [CLI Reference](docs/cli-reference.md) -- Gmail, Sheets, Playwright, Gemini commands
+- [Night Agents](docs/night-agents.md) -- Specialist agent prompts for overnight prep
+- [Scaling Guide](docs/scaling.md) -- VPS duplication guide for volume
+- [Channel Playbooks](playbooks/channels.md) -- Platform-specific posting flows
+- [Voice Rules](templates/voice-rules.md) -- Anti-AI detection rules
 
 ## License
 
-MIT — do whatever you want with it.
-
-Built by [James Taylor](https://linkedin.com/in/jamestaylor-signal-sprint) while building [SignalSprint](https://signalsprint.io).
+MIT -- do whatever you want with it.

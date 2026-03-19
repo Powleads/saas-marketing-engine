@@ -135,13 +135,13 @@ On first run (`/marketing-engine setup`), the engine scans your codebase:
 
 This means you don't need to write cold emails or figure out your ICP from scratch — the engine proposes everything based on your existing marketing copy and code.
 
-## Case Study
+## Real-World Results
 
-This engine was originally built to sell [SignalSprint](https://signalsprint.io) — a speed-to-lead platform for businesses running Facebook ads. Results in the first 2 days:
+In testing, a single instance of this engine produced the following results in 2 days:
 
 - 62 prospects discovered and added to pipeline
 - 19 personalized emails sent in one morning
 - 32 Reddit/Quora/YouTube comments posted
 - 1 hot reply from an agency CEO
 
-Full breakdown at [signalsprint.io/engine](https://signalsprint.io/engine).
+Your results will vary based on your product, market, and how well your config is tuned.
