@@ -1,10 +1,19 @@
-# The SaaS Marketing Engine v9.0
+# The SaaS Marketing Engine v10.0
 
 **One command. 24 hours of autonomous outreach. Zero marketing team.**
 
+Now with **Fill-the-Slot** execution + **adaptive priority queue**. 3-5x more actions per slot.
+
+## What's New in v10
+
+- **Fill-the-Slot execution**: Each cron gets a 25-min budget. Priority queue continuously picks the highest-need channel until time runs out. No idle gaps.
+- **Adaptive multipliers**: Phase 7d runs nightly, scores each channel on 10 performance signals, auto-adjusts priorities. Today's performance shapes tomorrow's focus.
+- **Dynamic priority queue**: `score = (remaining / target) * multiplier`. Undertouched channels get served first. Capped channels get skipped.
+- **YouTube commenting fixed**: `document.execCommand('insertText')` bypasses shadow DOM.
+
 ## What It Does
 
-Runs 24/7 as a Claude Code skill. Night shift discovers prospects, AI-qualifies them, drafts personalized emails. Day shift sends emails in waves, posts Reddit/LinkedIn/YouTube comments, checks for replies, and follows up automatically.
+Runs 24/7 as a Claude Code skill. Night shift discovers prospects and drafts emails. Day shift sends in waves, posts comments across 9 channels, checks for replies, follows up automatically.
 
 ### Day 1 -> Day 7 -> Scale
 
@@ -12,131 +21,110 @@ Runs 24/7 as a Claude Code skill. Night shift discovers prospects, AI-qualifies 
 |--------|-------|-------|-------|
 | Emails sent | 50 | 500 | 2,500/day |
 | Prospects discovered | 30 | 150 | 750/day |
-| Reddit comments | 15 | 15 | 75/day |
+| Reddit comments | 30 | 30 (cap) | 150/day |
+| LinkedIn comments | 20 | 20 (cap) | 100/day |
 | Proof tool runs | 20 | 100 | 500/day |
 
 ## Quick Start
 
-1. Clone into your project root:
-   ```bash
-   git clone https://github.com/Powleads/saas-marketing-engine .marketing-engine
-   ```
+### 1. Clone
 
-2. Copy skill + config to your Claude Code setup:
-   ```bash
-   cp .marketing-engine/skills/marketing-engine.md .claude/skills/
-   cp .marketing-engine/config/config-template.md .claude/config/marketing-engine-config.md
-   ```
+```bash
+git clone https://github.com/Powleads/saas-marketing-engine .marketing-engine
+```
 
-3. First run -- the engine scans your codebase and auto-generates config:
-   ```bash
-   /marketing-engine setup
-   ```
+### 2. Copy skill + config
 
-4. Review the generated config, connect Gmail + Google Sheets, then:
-   ```bash
-   /marketing-engine autopilot
-   ```
+```bash
+cp .marketing-engine/skills/marketing-engine.md .claude/skills/
+mkdir -p .claude/config
+cp .marketing-engine/config/config-template.md .claude/config/marketing-engine-config.md
+```
+
+### 3. Setup
+
+```bash
+/marketing-engine setup
+```
+
+Auto-scans your codebase, generates config, opens browser for logins, creates Sheets CRM.
+
+### 4. Run
+
+```bash
+/marketing-engine autopilot
+```
+
+18 crons activate. Check back in 24 hours.
+
+## How Fill-the-Slot Works
+
+**Before (v8):** Fixed actions per slot, 5 min work, 55 min idle.
+
+**After (v10):** Priority loop runs 25 minutes per cron:
+
+```
+START 18:15 -- Budget: 25 min
+
+[Once] Reply check + social notifs (5 min)
+[Once] Due emails (1 min)
+
+[Fill Loop]
+  Scores: LinkedIn 1.50 > IG 0.90 > Reddit 0.44
+  -> LinkedIn x5 (3 min) -- 16 min left
+  -> IG DMs x3 (2 min) -- 14 min left
+  -> FB msgs x3 (2 min) -- 12 min left
+  -> Reddit x3 (2.5 min) -- 9 min left
+  -> LinkedIn x5 (3 min) -- 6 min left
+  -> Quora x2 (2 min) -- 4 min left
+  -> Reddit x3 (2.5 min) -- EXIT
+
+[Wrap] 7 batches, 24 actions in 25 min
+```
+
+## Adaptive Multipliers
+
+The engine learns which channels work:
+
+| Signal | Effect |
+|--------|--------|
+| Channel drove signups | +0.3x |
+| Channel drove site traffic | +0.2x |
+| Reply rate > 5% | +0.2x |
+| Below 50% of target | +0.1x |
+| Hit ceiling 3 days | -0.1x |
+| Zero engagement all week | -0.2x |
+| Rate limited / CAPTCHA | -0.3x |
+| Channel banned / broken | -0.5x |
+
+Stored in Google Sheets `Multipliers` tab. Recalculated nightly. Clamped 0.1-2.5.
 
 ## Requirements
 
 - [Claude Code](https://claude.com/claude-code) subscription
-- Google Workspace account (Gmail + Sheets)
+- Google Workspace (Gmail + Sheets)
 - Playwright (`npx playwright install chromium`)
 - Node.js 18+
 
 ## Cost
 
-$0/month (excluding Claude Code subscription). No Zapier. No HubSpot. No Apollo. No Instantly.
+**$0/month** (excluding Claude Code subscription).
 
-## Architecture
-
-The engine uses a **split architecture**: a lean orchestration skill (~265 lines) that references detailed docs for specific capabilities. This keeps the skill file fast to load while giving the engine deep knowledge when it needs it.
+## Repo Structure
 
 ```
-skills/
-  marketing-engine.md        # Orchestration skill (~265 lines) -- drop into .claude/skills/
-
-config/
-  config-template.md         # Config template -- copy + fill in your product details
-  example-saas.md            # Filled example for a fictional SaaS
-
-docs/
-  setup-guide.md             # Step-by-step installation + proof tool setup
-  how-it-works.md            # Full 24hr flow breakdown
-  mystery-tests.md           # Proof tool: CLI recon + form fill + response tracking
-  cli-reference.md           # Gmail, Sheets, Playwright, Gemini CLI commands
-  night-agents.md            # 4-6 specialist agents for overnight content prep
-  scaling.md                 # VPS duplication guide for volume
-
-playbooks/
-  channels.md                # Platform-specific posting flows (Reddit, LinkedIn, YouTube, etc.)
-
-templates/
-  voice-rules.md             # Anti-AI detection + brand mention rules
+skills/marketing-engine.md    # Core skill (~165 lines)
+config/config-template.md     # Blank config
+config/example-saas.md        # Example SaaS config
+docs/                         # Setup guide, CLI reference, scaling
+playbooks/channels.md         # Per-channel playbooks
+templates/voice-rules.md      # Anti-AI voice rules
 ```
-
-### How the split works
-
-The skill file (`skills/marketing-engine.md`) contains:
-- **Modes:** Setup, Autopilot, Run
-- **Cron schedule:** 18 daily slots across 4 blocks
-- **Phase definitions:** What to do in each phase (1-7)
-- **Caps and targets:** Per-run and daily limits
-- **Voice rules summary:** Quick reference for content quality
-
-When the engine needs details, it reads the relevant doc:
-- Posting on Reddit? Read `playbooks/channels.md`
-- Running a mystery test? Read `docs/mystery-tests.md`
-- Sending emails? Read `docs/cli-reference.md`
-- Preparing night content? Read `docs/night-agents.md`
-
-This means you can customize any aspect by editing the relevant doc without touching the skill file.
-
-## The 24-Hour Cycle
-
-**Night Shift (10PM-6AM)** -- Automated preparation
-- 10PM: Discover 30 prospects via Google Maps + LinkedIn
-- 12AM: Draft personalized emails for all due prospects
-- 2AM: Launch specialist agents to prep content in parallel
-- 3:30AM: Review agent outputs, pre-write comments
-- 5AM: Final prep -- LinkedIn post, DMs, everything staged
-
-**Day Shift (7AM-9PM)** -- Send + engage
-- 7AM: Send all night-prepped drafts + LinkedIn post
-- 9AM-4PM: Pipeline discovery + proof tool tests + comments
-- 5PM-9PM: Evening comments + final sends + daily evaluation
-
-## Proof Tool (Mystery Tests)
-
-The engine can automatically test your prospects' businesses -- submit their contact form as a test customer, measure response time, and use the data in personalized outreach. See [docs/mystery-tests.md](docs/mystery-tests.md) for the full process.
-
-Don't have a proof tool yet? The setup wizard helps you build one:
-- **Screenshot + AI Audit** -- screenshot their site, grade it with Gemini Vision
-- **Free Calculator** -- build a simple ROI calculator page
-- **Full Mystery Test** -- submit their forms and measure response time
-
-## Knowledge Base (Obsidian-Compatible)
-
-The engine's docs are plain markdown files that work as an [Obsidian](https://obsidian.md/) vault. Open your `docs/` folder in Obsidian for:
-- Visual graph of all marketing docs
-- Backlinks between files
-- Nice editor for reviewing and editing config
-- Daily log entries as a knowledge base
-
-Not required -- any markdown editor works. But Obsidian makes it easier to see the big picture.
-
-## Docs
-
-- [Setup Guide](docs/setup-guide.md) -- Step-by-step installation + proof tool setup
-- [How It Works](docs/how-it-works.md) -- Full technical breakdown
-- [Mystery Tests](docs/mystery-tests.md) -- Proof tool reference
-- [CLI Reference](docs/cli-reference.md) -- Gmail, Sheets, Playwright, Gemini commands
-- [Night Agents](docs/night-agents.md) -- Specialist agent prompts for overnight prep
-- [Scaling Guide](docs/scaling.md) -- VPS duplication guide for volume
-- [Channel Playbooks](playbooks/channels.md) -- Platform-specific posting flows
-- [Voice Rules](templates/voice-rules.md) -- Anti-AI detection rules
 
 ## License
 
-MIT -- do whatever you want with it.
+MIT
+
+---
+
+Built by [James Taylor](https://linkedin.com/in/jamestaylor-signal-sprint) while building [SignalSprint](https://signalsprint.io).
