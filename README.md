@@ -1,130 +1,242 @@
-# The SaaS Marketing Engine v10.0
+# The SaaS Marketing Engine
 
-**One command. 24 hours of autonomous outreach. Zero marketing team.**
+> Autonomous 7-channel outbound marketing that runs 24/7. Discover prospects, mystery-test their websites, send personalised outreach across email, LinkedIn, Instagram, Reddit, YouTube, and more. Zero marketing team required.
 
-Now with **Fill-the-Slot** execution + **adaptive priority queue**. 3-5x more actions per slot.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-blueviolet)](https://claude.com/claude-code)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
+[![Convex](https://img.shields.io/badge/Convex-realtime-orange)](https://convex.dev)
 
-## What's New in v10
+## Why This Exists
 
-- **Fill-the-Slot execution**: Each cron gets a 25-min budget. Priority queue continuously picks the highest-need channel until time runs out. No idle gaps.
-- **Adaptive multipliers**: Phase 7d runs nightly, scores each channel on 10 performance signals, auto-adjusts priorities. Today's performance shapes tomorrow's focus.
-- **Dynamic priority queue**: `score = (remaining / target) * multiplier`. Undertouched channels get served first. Capped channels get skipped.
-- **YouTube commenting fixed**: `document.execCommand('insertText')` bypasses shadow DOM.
+Most businesses lose leads because they respond too slowly. Most marketing tools solve the wrong problem -- they help you send more emails, not find the right prospects or prove the problem exists first.
 
-## What It Does
+This engine does what a 3-person marketing team would do, autonomously:
 
-Runs 24/7 as a Claude Code skill. Night shift discovers prospects and drafts emails. Day shift sends in waves, posts comments across 9 channels, checks for replies, follows up automatically.
+1. **Discovers** prospects via Google Maps, Facebook Ad Library, LinkedIn, and agency directories
+2. **Mystery-tests** their websites by submitting real enquiries and timing the response
+3. **Sends personalised outreach** with their actual mystery test results, not generic templates
+4. **Follows up** across 7 channels on a scheduled cadence until they reply or the sequence ends
+5. **Learns** which channels perform and auto-adjusts priority every night
 
-### Day 1 -> Day 7 -> Scale
+Nobody else does autonomous discovery + mystery testing + 7-channel outreach in one system. The closest alternatives are $900-10,000/month AI SDR tools that only do email.
 
-| Metric | Day 1 | Day 7 | 5 VPS |
-|--------|-------|-------|-------|
-| Emails sent | 50 | 500 | 2,500/day |
-| Prospects discovered | 30 | 150 | 750/day |
-| Reddit comments | 30 | 30 (cap) | 150/day |
-| LinkedIn comments | 20 | 20 (cap) | 100/day |
-| Proof tool runs | 20 | 100 | 500/day |
+<!-- Screenshots: replace placeholders before launch -->
+| | |
+|---|---|
+| ![Engine Landing Page](docs/screenshots/landing-page.png) | ![Real-Time Dashboard](docs/screenshots/dashboard.png) |
+| **Landing Page** | **Real-Time Dashboard** |
+| ![Setup Wizard](docs/screenshots/setup-wizard.png) | ![Terminal Output](docs/screenshots/terminal.png) |
+| **5-Step Setup Wizard** | **Engine Running in Autopilot** |
 
 ## Quick Start
 
-### 1. Clone
+### Prerequisites
+
+- [Claude Code](https://claude.com/claude-code) subscription
+- [Node.js](https://nodejs.org) 18+
+- Google Workspace account (Gmail + Sheets)
+- Playwright: `npx playwright install chromium`
+
+### 1. Clone and configure
 
 ```bash
-git clone https://github.com/Powleads/saas-marketing-engine .marketing-engine
+git clone https://github.com/Powleads/saas-marketing-engine.git
+cd saas-marketing-engine
+cp .env.example .env.local
+# Fill in your API keys
 ```
 
-### 2. Copy skill + config
-
-```bash
-cp .marketing-engine/skills/marketing-engine.md .claude/skills/
-mkdir -p .claude/config
-cp .marketing-engine/config/config-template.md .claude/config/marketing-engine-config.md
-```
-
-### 3. Setup
+### 2. Run setup
 
 ```bash
 /marketing-engine setup
 ```
 
-Auto-scans your codebase, generates config, opens browser for logins, creates Sheets CRM.
+Opens a browser for social logins, creates your Google Sheets CRM, and validates configuration.
 
-### 4. Run
+### 3. Start the engine
 
 ```bash
 /marketing-engine autopilot
 ```
 
-18 crons activate. Check back in 24 hours.
+18 cron slots activate. Night shift discovers and drafts. Day shift sends and engages.
 
-## How Fill-the-Slot Works
+## What It Does
 
-**Before (v8):** Fixed actions per slot, 5 min work, 55 min idle.
+### 6 Outbound Channels
 
-**After (v10):** Priority loop runs 25 minutes per cron:
+| Channel | What it does |
+|---------|-------------|
+| **Email** | Personalised cold email sequences with mystery test results |
+| **LinkedIn** | ICP commenting, connection requests, DMs |
+| **Instagram** | DMs to enriched prospects referencing their content |
+| **Reddit** | Value-first comments on trending threads in target subreddits |
+| **YouTube** | Authority comments on niche-relevant videos |
+| **Mystery Testing** | Submits real enquiries, tracks response time, grades A-F |
 
-```
-START 18:15 -- Budget: 25 min
+### Key Features
 
-[Once] Reply check + social notifs (5 min)
-[Once] Due emails (1 min)
+- **Niche-Specific Templates** -- Pre-built for dental, medspa, plumber, solicitor, agency + generic
+- **Mystery Testing** -- Real enquiries, real response times, real audit data in outreach
+- **ESP Matching** -- Gmail recipients get emails from GWS, Outlook from M365
+- **Plan Limit Enforcement** -- Lite/Pro/Agency tiers with hard action limits
+- **Real-Time Dashboard** -- Convex WebSocket updates, no polling
+- **Docker Container Isolation** -- Each client engine runs in its own container
+- **noVNC Social Login** -- Secure browser session for social auth, credentials never leave container
+- **AgentMail Integration** -- Auto-provision branded sending domains + mailboxes
+- **Self-Healing Watchdog** -- Token refresh, service restart, health alerts
 
-[Fill Loop]
-  Scores: LinkedIn 1.50 > IG 0.90 > Reddit 0.44
-  -> LinkedIn x5 (3 min) -- 16 min left
-  -> IG DMs x3 (2 min) -- 14 min left
-  -> FB msgs x3 (2 min) -- 12 min left
-  -> Reddit x3 (2.5 min) -- 9 min left
-  -> LinkedIn x5 (3 min) -- 6 min left
-  -> Quora x2 (2 min) -- 4 min left
-  -> Reddit x3 (2.5 min) -- EXIT
+### How a 24-Hour Cycle Works
 
-[Wrap] 7 batches, 24 actions in 25 min
-```
+**Night (10PM-7AM):** Discover 30+ prospects, enrich contacts, draft emails, pre-write social comments
 
-## Adaptive Multipliers
+**Morning (7-9AM):** Send email waves, LinkedIn posts, mystery test submissions
 
-The engine learns which channels work:
+**Business Hours (9AM-5PM):** Social outreach, mystery test checks, reply handling
 
-| Signal | Effect |
-|--------|--------|
-| Channel drove signups | +0.3x |
-| Channel drove site traffic | +0.2x |
-| Reply rate > 5% | +0.2x |
-| Below 50% of target | +0.1x |
-| Hit ceiling 3 days | -0.1x |
-| Zero engagement all week | -0.2x |
-| Rate limited / CAPTCHA | -0.3x |
-| Channel banned / broken | -0.5x |
+**Evening (5-9PM):** Reddit/LinkedIn engagement peaks, final reply checks, nightly evaluation
 
-Stored in Google Sheets `Multipliers` tab. Recalculated nightly. Clamped 0.1-2.5.
-
-## Requirements
-
-- [Claude Code](https://claude.com/claude-code) subscription
-- Google Workspace (Gmail + Sheets)
-- Playwright (`npx playwright install chromium`)
-- Node.js 18+
-
-## Cost
-
-**$0/month** (excluding Claude Code subscription).
-
-## Repo Structure
+## Architecture
 
 ```
-skills/marketing-engine.md    # Core skill (~165 lines)
-config/config-template.md     # Blank config
-config/example-saas.md        # Example SaaS config
-docs/                         # Setup guide, CLI reference, scaling
-playbooks/channels.md         # Per-channel playbooks
-templates/voice-rules.md      # Anti-AI voice rules
++------------------+     +------------------+     +------------------+
+|   Next.js 16     |     |     Convex       |     |   Hetzner VPS    |
+|   (App Router)   |<--->|   (Real-time)    |<--->|  (Engine Runtime) |
+|                  |     |                  |     |                  |
+| - Dashboard UI   |     | - engineInstances|     | - Claude Code    |
+| - Engine setup   |     | - engineStats    |     | - Playwright     |
+| - Mystery test   |     | - engineActions  |     | - Docker         |
+| - Pricing page   |     | - mysteryTests   |     | - noVNC          |
++--------+---------+     +--------+---------+     +--------+---------+
+         |                         |                        |
+         v                         v                        v
++------------------+     +------------------+     +------------------+
+|     Clerk        |     |     Stripe       |     |    AgentMail     |
+|   (Auth + SSO)   |     |  (Subscriptions) |     | (Email Infra)    |
++------------------+     +------------------+     +------------------+
 ```
+
+## Pricing
+
+### Self-Hosted (Free)
+
+Clone this repo, bring your own infrastructure:
+- Claude Code subscription (~$20-100/mo)
+- VPS (~$6/mo on Hetzner)
+- Google Workspace (~$12/mo)
+- Residential proxy (~$25/mo)
+
+**Total: ~$63-143/month** for unlimited outreach.
+
+### Hosted on SignalSprint
+
+| Plan | Price | Channels | Actions/day | Niches |
+|------|-------|----------|-------------|--------|
+| **Lite** | $49/mo | Email + Mystery Test | 30 | 1 |
+| **Pro** | $149/mo | All 6 | 150 | 3 |
+| **Agency** | $299/mo | All 6 + Multi-client | 500 | Unlimited |
+
+[Start free on SignalSprint](https://signalsprint.io/engine)
+
+## FAQ
+
+**Is this legal?** The engine performs the same actions a human marketing assistant would. Mystery tests use publicly available contact forms. All emails include unsubscribe.
+
+**Will my social accounts get banned?** Residential proxies, human-speed delays, and anti-detection voice rules. Use dedicated accounts, not personal profiles.
+
+**How is this different from Instantly/Smartlead?** Those are email-only. This discovers prospects, mystery-tests websites, and engages across 7 channels with real audit data.
+
+**How is this different from AI SDR tools ($900-10K/mo)?** Same or better results at 5-20x lower cost, plus mystery testing and open source transparency.
+
+## Contributing
+
+Most useful areas: new niche templates, channel playbooks, voice rules, Playwright selector fixes.
+
+1. Fork the repo
+2. Create a feature branch
+3. Submit a PR with a clear description
 
 ## License
 
-MIT
+MIT -- use it however you want.
 
 ---
 
-Built by [James Taylor](https://linkedin.com/in/jamestaylor-signal-sprint) while building [SignalSprint](https://signalsprint.io).
+Built by [James Taylor](https://signalsprint.io) while building [SignalSprint](https://signalsprint.io) -- speed-to-lead software that turns intent into first-call wins.
+
+---
+
+## Self-Hosted Installation (VPS)
+
+Want to run everything yourself? Here's the full VPS setup:
+
+### 1. Provision a VPS
+
+```bash
+# Hetzner cx22 (~€4/mo) or any Ubuntu 24.04 server with 4GB+ RAM
+# After server is created:
+ssh root@YOUR_VPS_IP
+```
+
+### 2. Install dependencies
+
+```bash
+# Docker
+curl -fsSL https://get.docker.com | sh
+
+# Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs
+
+# Clone the engine
+git clone https://github.com/Powleads/saas-marketing-engine.git /opt/engine
+cd /opt/engine
+```
+
+### 3. Build the Docker image
+
+```bash
+docker build -t signalsprint-engine:latest -f docker/engine/Dockerfile .
+```
+
+### 4. Create your client config
+
+```bash
+node scripts/engine/generate-config.js \
+  --niche dental \
+  --brand "Your Business" \
+  --cities "London,Manchester" \
+  --channels "email,mystery_test,reddit,linkedin,instagram,youtube,twitter" \
+  --plan pro \
+  --instance-id "my-engine-001" \
+  > /opt/engine/config/client-config.json
+```
+
+### 5. Run your engine container
+
+```bash
+mkdir -p /opt/engine/logs
+docker run -d \
+  --name my-engine \
+  --restart unless-stopped \
+  --memory 1g \
+  -v /opt/engine/config:/app/config:ro \
+  -v /opt/engine/logs:/app/logs \
+  -p 6080:6080 \
+  -e CLIENT_CONFIG=/app/config/client-config.json \
+  -e LOOP_INTERVAL=1200 \
+  signalsprint-engine:latest
+```
+
+### 6. Check it's running
+
+```bash
+docker logs my-engine --tail 20
+# Should show: Xvfb running, Chrome running, noVNC running, engine starting
+```
+
+### Or skip all of this and use the hosted version
+
+[signalsprint.io/engine](https://signalsprint.io/engine) — 5-minute setup, no VPS, no Docker, no maintenance. From $49/mo.
